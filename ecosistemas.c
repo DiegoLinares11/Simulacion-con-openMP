@@ -256,7 +256,26 @@ void update_carnivores(int i, int j) {
 }
 
 void get_random_empty_adjacent(int i, int j, int* ni, int* nj) {
-
+    int dirs[4][2] = {{-1,0},{1,0},{0,-1},{0,1}};
+    int empty_positions[4][2];
+    int empty_count = 0;
+    
+    for (int d = 0; d < 4; d++) {
+        int x = i + dirs[d][0], y = j + dirs[d][1];
+        if (x >= 0 && x < SIZE && y >= 0 && y < SIZE && grid[x][y].type == EMPTY) {
+            empty_positions[empty_count][0] = x;
+            empty_positions[empty_count][1] = y;
+            empty_count++;
+        }
+    }
+    
+    if (empty_count > 0) {
+        int choice = rand() % empty_count;
+        *ni = empty_positions[choice][0];
+        *nj = empty_positions[choice][1];
+    } else {
+        *ni = *nj = -1;
+    }
 }
 
 void copy_grid() {
