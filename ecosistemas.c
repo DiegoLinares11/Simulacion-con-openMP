@@ -156,11 +156,103 @@ void update_plants(int i, int j) {
 }
 
 void update_herbivores(int i, int j) {
-
+    Cell current = grid[i][j];
+    int dirs[4][2] = {{-1,0},{1,0},{0,-1},{0,1}};
+    int moved = 0;
+    
+    // Buscar plantas para comer
+    for (int d = 0; d < 4 && !moved; d++) {
+        int ni = i + dirs[d][0], nj = j + dirs[d][1];
+        if (ni >= 0 && ni < SIZE && nj >= 0 && nj < SIZE) {
+            if (grid[ni][nj].type == PLANT) {
+                #pragma omp critical
+                {
+                    if (next_grid[ni][nj].type == PLANT) {
+                        // Mover herbívoro y comer planta
+                        next_grid[ni][nj] = (Cell){HERBIVORE, current.energy + HERB_ENERGY_GAIN, 
+                                                  current.age + 1, 0, 1};
+                        next_grid[i][j] = (Cell){EMPTY, 0, 0, 0, 0};
+                        moved = 1;
+                    }
+                }
+            }
+        }
+    }
+    
+    if (!moved) {
+        // No encontró comida
+        next_grid[i][j].ticks_no_food++;
+        next_grid[i][j].age++;
+        
+        // Morir si no ha comido en mucho tiempo
+        if (next_grid[i][j].ticks_no_food >= MAX_NO_FOOD_TICKS) {
+            next_grid[i][j] = (Cell){EMPTY, 0, 0, 0, 0};
+        }
+        // Intentar reproducirse si tiene energía suficiente
+        else if (current.energy >= REPRODUCTION_ENERGY_THRESHOLD && (rand() % 100) < ANIMAL_REPRODUCTION_RATE) {
+            int ni, nj;
+            get_random_empty_adjacent(i, j, &ni, &nj);
+            if (ni != -1) {
+                #pragma omp critical
+                {
+                    if (next_grid[ni][nj].type == EMPTY) {
+                        next_grid[ni][nj] = (Cell){HERBIVORE, 1, 0, 0, 0};
+                        next_grid[i][j].energy--; // Costo de reproducción
+                    }
+                }
+            }
+        }
+    }
 }
 
 void update_carnivores(int i, int j) {
-
+    Cell current = grid[i][j];
+    int dirs[4][2] = {{-1,0},{1,0},{0,-1},{0,1}};
+    int moved = 0;
+    
+    // Buscar herbívoros para cazar
+    for (int d = 0; d < 4 && !moved; d++) {
+        int ni = i + dirs[d][0], nj = j + dirs[d][1];
+        if (ni >= 0 && ni < SIZE && nj >= 0 && nj < SIZE) {
+            if (grid[ni][nj].type == HERBIVORE) {
+                #pragma omp critical
+                {
+                    if (next_grid[ni][nj].type == HERBIVORE) {
+                        // Mover carnívoro y cazar herbívoro
+                        next_grid[ni][nj] = (Cell){CARNIVORE, current.energy + CARN_ENERGY_GAIN, 
+                                                  current.age + 1, 0, 1};
+                        next_grid[i][j] = (Cell){EMPTY, 0, 0, 0, 0};
+                        moved = 1;
+                    }
+                }
+            }
+        }
+    }
+    
+    if (!moved) {
+        // No encontró comida
+        next_grid[i][j].ticks_no_food++;
+        next_grid[i][j].age++;
+        
+        // Morir si no ha comido en mucho tiempo
+        if (next_grid[i][j].ticks_no_food >= MAX_NO_FOOD_TICKS) {
+            next_grid[i][j] = (Cell){EMPTY, 0, 0, 0, 0};
+        }
+        // Intentar reproducirse si tiene energía suficiente
+        else if (current.energy >= REPRODUCTION_ENERGY_THRESHOLD && (rand() % 100) < ANIMAL_REPRODUCTION_RATE) {
+            int ni, nj;
+            get_random_empty_adjacent(i, j, &ni, &nj);
+            if (ni != -1) {
+                #pragma omp critical
+                {
+                    if (next_grid[ni][nj].type == EMPTY) {
+                        next_grid[ni][nj] = (Cell){CARNIVORE, 1, 0, 0, 0};
+                        next_grid[i][j].energy--; // Costo de reproducción
+                    }
+                }
+            }
+        }
+    }
 }
 
 void get_random_empty_adjacent(int i, int j, int* ni, int* nj) {
