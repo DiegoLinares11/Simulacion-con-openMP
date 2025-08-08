@@ -287,6 +287,37 @@ void copy_grid() {
     }
 }
 
-void print_state(int tick) {
 
+
+void print_state(int tick) {
+    int p = 0, h = 0, c = 0;
+    
+    // Contar poblaciones
+    #pragma omp parallel for collapse(2) reduction(+:p,h,c)
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            switch (grid[i][j].type) {
+                case PLANT: p++; break;
+                case HERBIVORE: h++; break;
+                case CARNIVORE: c++; break;
+                default: break;
+            }
+        }
+    }
+    
+    printf("\nTick %d\n", tick);
+    printf("Plantas: %d, Herbivoros: %d, Carnivoros: %d\n", p, h, c);
+    
+    // Mostrar grid
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            switch (grid[i][j].type) {
+                case PLANT: printf("P "); break;
+                case HERBIVORE: printf("H "); break;
+                case CARNIVORE: printf("C "); break;
+                default: printf(". "); break;
+            }
+        }
+        printf("\n");
+    }
 }
