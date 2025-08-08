@@ -16,6 +16,7 @@
 #define MAX_NO_FOOD_TICKS 3 // Ticks sin comida antes de morir
 #define REPRODUCTION_ENERGY_THRESHOLD 2 // Energía mínima para reproducirse
 #define MOVEMENT_PROBABILITY 90 // Porcentaje de probabilidad de movimiento aleatorio para que no se queden estancados si no encuentra comida.
+#define PLANT_MAX_AGE 15  
 
 typedef enum { EMPTY, PLANT, HERBIVORE, CARNIVORE } Species;
 
@@ -37,6 +38,7 @@ void update_carnivore(int i, int j);
 void print_state(int tick);
 void move_animal(int i, int j, int ni, int nj, Cell animal);
 void reproduce_animal(int i, int j, Species species);
+int count_empty_adjacent(int i, int j);
 
 int main() {
     srand(time(NULL));
@@ -149,10 +151,25 @@ void simulate() {
 }
 
 void update_plant(int i, int j) {
+    // Verificar si la planta aún existe
     if (next_grid[i][j].type != PLANT) return;
     
+    // 1. Envejecimiento
     next_grid[i][j].age++;
     
+    // 2. Muerte por vejez
+    if (next_grid[i][j].age > PLANT_MAX_AGE) {
+        next_grid[i][j] = (Cell){EMPTY, 0, 0, 0};
+        return;
+    }
+    
+    // 3. Muerte por falta de espacio (rodeada completamente)
+    if (count_empty_adjacent(i, j) == 0) {
+        next_grid[i][j] = (Cell){EMPTY, 0, 0, 0};
+        return;
+    }
+    
+    // 4. Reproducción
     if (rand() % 100 < PLANT_REPRODUCTION_RATE) {
         int dirs[8][2] = {{-1,0},{1,0},{0,-1},{0,1},{-1,-1},{-1,1},{1,-1},{1,1}};
         int reproduced = 0;
@@ -161,15 +178,28 @@ void update_plant(int i, int j) {
             int ni = i + dirs[d][0], nj = j + dirs[d][1];
             if (ni >= 0 && ni < SIZE && nj >= 0 && nj < SIZE) {
                 #pragma omp critical
-                {
-                    if (next_grid[ni][nj].type == EMPTY && !reproduced) {
-                        next_grid[ni][nj] = (Cell){PLANT, 1, 0, 0};
-                        reproduced = 1;
-                    }
+                if (next_grid[ni][nj].type == EMPTY) {
+                    next_grid[ni][nj] = (Cell){PLANT, 1, 0, 0};
+                    reproduced = 1;
                 }
             }
         }
     }
+}
+
+int count_empty_adjacent(int i, int j) {
+    int count = 0;
+    int dirs[8][2] = {{-1,0},{1,0},{0,-1},{0,1},{-1,-1},{-1,1},{1,-1},{1,1}};
+    
+    for (int d = 0; d < 8; d++) {
+        int ni = i + dirs[d][0], nj = j + dirs[d][1];
+        if (ni >= 0 && ni < SIZE && nj >= 0 && nj < SIZE) {
+            if (next_grid[ni][nj].type == EMPTY) {
+                count++;
+            }
+        }
+    }
+    return count;
 }
 
 void update_herbivore(int i, int j) {
