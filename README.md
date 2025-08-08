@@ -28,7 +28,7 @@ Simulación paralelizada con OpenMP de un ecosistema con tres especies:
 gcc -fopenmp ecosistema.c -o ecosistema
 
 # Ejecutar
-./ecosistemas
+./ecosistema
 ```
 
 ### Paralelización con OpenMP
