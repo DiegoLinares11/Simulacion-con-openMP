@@ -97,3 +97,5 @@ A la mitad:
 AL final: 
 
 ![alt text](image-4.png)
+
+#### Analizando los resultados pues es de esperarse que los herbivooros bajen demasiado ya que estos ganan solo 1 energia por cada planta que comen (al inicio comen bastantes plantas y por eso las plantas en un inicio bajan hasta 93) pero como necesitan minimo 2 de energia para reproducirse ya no suben, aparte y luego al haber muchas menos plantas ya los herbivoros no pueden comer, mas que tambien hay carnivoros tratando de comerse estos herbivoros, al pasar un rato y ya no haber tantans plantas algunos herbivoros no comen y siguen disminuyendo. Al disminuir herbivoros las plantas empiezan a subir y asi. Asi que es comportamiento esperado. 
